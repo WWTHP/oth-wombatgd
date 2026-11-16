@@ -1,0 +1,34 @@
+WombatGD diesel sound loops - credits
+
+These loops are adapted from Creative Commons recordings on freesound.org.
+Changes made: cut to a section, converted to 48 kHz mono, loudness-leveled
+(dynaudnorm + loudnorm), and the ends crossfaded into a seamless loop.
+
+idle.wav
+  "Volkswagen Golf II 1.6 Diesel Engine Start Idle Stop Mono.wav" by Soundholder
+  https://freesound.org/people/Soundholder/sounds/425862/
+  License: CC BY 3.0  https://creativecommons.org/licenses/by/3.0/
+
+load.wav, load_high.wav
+  "Mercedes_180D_636_accelerate_up_down_rpm.wav" by hantorio
+  https://freesound.org/people/hantorio/sounds/274910/
+  License: CC BY 3.0  https://creativecommons.org/licenses/by/3.0/
+
+idle_mb200d.wav
+  "Mercedes Benz 200 D idling. Recorded inside" by YleArkisto
+  https://freesound.org/people/YleArkisto/sounds/509735/
+  License: CC BY 4.0  https://creativecommons.org/licenses/by/4.0/
+
+Measured from the recordings (used as the mod's default pitch references):
+  idle.wav        ~834 RPM  (27.8 Hz firing, 4-cylinder)
+  load.wav        ~1170 RPM (9.7 Hz full-cycle rate, 4-cylinder)
+  load_high.wav   ~1460 RPM
+  idle_mb200d.wav  weak signal; RPM not measurable (recorded inside the car)
+
+om617_on_<rpm>.wav, om617_off_<rpm>.wav
+  Procedurally synthesized by the WombatGD mod (tools/synth_om617.py): a model
+  of a Mercedes OM617 inline-5 naturally aspirated diesel (firing order
+  1-2-4-5-3, combustion knock, injector/valve ticks, exhaust and intake).
+  No recorded audio is contained in these files. The tone was shaped with an
+  EQ curve measured against a W124 300D idle recording on Wikimedia Commons
+  (by Chill96, CC BY 3.0); only the averaged spectrum was used.

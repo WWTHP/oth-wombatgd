@@ -1,0 +1,63 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <LangVersion>latest</LangVersion>
+    <Nullable>disable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>WombatGD</AssemblyName>
+    <RootNamespace>WombatGD</RootNamespace>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <!-- Override with: dotnet build -p:GameDir="/path/to/over the hill" -->
+    <GameDir Condition="'$(GameDir)' == ''">$(HOME)/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/common/over the hill</GameDir>
+    <MLDir>$(GameDir)/MelonLoader</MLDir>
+    <InteropDir>$(MLDir)/Il2CppAssemblies</InteropDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="MelonLoader"><HintPath>$(MLDir)/net6/MelonLoader.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="0Harmony"><HintPath>$(MLDir)/net6/0Harmony.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Il2CppInterop.Runtime"><HintPath>$(MLDir)/net6/Il2CppInterop.Runtime.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Il2Cppmscorlib"><HintPath>$(InteropDir)/Il2Cppmscorlib.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Assembly-CSharp"><HintPath>$(InteropDir)/Assembly-CSharp.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Il2CppFMODUnity"><HintPath>$(InteropDir)/Il2CppFMODUnity.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(InteropDir)/UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Unity.InputSystem"><HintPath>$(InteropDir)/Unity.InputSystem.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.IMGUIModule"><HintPath>$(InteropDir)/UnityEngine.IMGUIModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.PhysicsModule"><HintPath>$(InteropDir)/UnityEngine.PhysicsModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.ParticleSystemModule"><HintPath>$(InteropDir)/UnityEngine.ParticleSystemModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Il2CppInterop.Common"><HintPath>$(MLDir)/net6/Il2CppInterop.Common.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Il2CppFusion.Runtime"><HintPath>$(InteropDir)/Il2CppFusion.Runtime.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Il2CppFusion.Sockets"><HintPath>$(InteropDir)/Il2CppFusion.Sockets.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Il2CppFusion.Common"><HintPath>$(InteropDir)/Il2CppFusion.Common.dll</HintPath><Private>false</Private></Reference>
+  </ItemGroup>
+
+  <!-- Copy the built mod into the game's Mods folder -->
+  <Target Name="DeployToGame" AfterTargets="Build" Condition="'$(Deploy)' != 'false' And Exists('$(GameDir)/Mods')">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GameDir)/Mods" />
+  </Target>
+
+  <!-- Install the diesel loops + credits into UserData/WombatGD/Sounds (never overwrites user files) -->
+  <ItemGroup>
+    <SoundFiles Include="$(MSBuildProjectDirectory)/../assets/sounds/loops/*" />
+  </ItemGroup>
+  <ItemGroup>
+    <SmokeFiles Include="../assets/smoke/*.rgba" />
+  </ItemGroup>
+  <Target Name="DeploySmoke" AfterTargets="Build" Condition="'$(Deploy)' != 'false' And Exists('$(GameDir)/UserData')">
+    <Copy SourceFiles="@(SmokeFiles)" DestinationFolder="$(GameDir)/UserData/WombatGD/Smoke" SkipUnchangedFiles="true" />
+  </Target>
+  <Target Name="DeploySounds" AfterTargets="Build" Condition="'$(Deploy)' != 'false' And Exists('$(GameDir)/UserData')">
+    <Copy SourceFiles="@(SoundFiles)" DestinationFolder="$(GameDir)/UserData/WombatGD/Sounds" SkipUnchangedFiles="true" />
+  </Target>
+
+  <!-- UnityEngine.CoreModule ships its own UnmanagedCallersOnlyAttribute; alias the real one. -->
+  <Target Name="AliasInteropServices" AfterTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <ReferencePath Condition="'%(Filename)' == 'System.Runtime.InteropServices'">
+        <Aliases>global,sysinterop</Aliases>
+      </ReferencePath>
+    </ItemGroup>
+  </Target>
+
+</Project>
