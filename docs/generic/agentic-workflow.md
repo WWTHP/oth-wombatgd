@@ -14,7 +14,7 @@ understand → locate → plan → change → verify (check.sh) → deploy? → 
 1. **Understand.** Read `AGENTS.md`, `docs/project/README.md`, the game layer
    (`docs/games/<game>/`), and the debugging tables in the game layer and
    [il2cpp-melonloader.md](il2cpp-melonloader.md). Check the issue/board for prior work.
-2. **Locate.** Find the game types and members (`.game/` from the game's `regen-decomp.sh`,
+2. **Locate.** Find the game types and members (`../decomp/<game>/` from the game's `regen-decomp.sh`,
    `tools/dump_types.py`, `ilspycmd`). Confirm every Unity/IL2CPP API you plan to call exists
    in this build *before* writing code around it.
 3. **Plan.** For anything touching networking, native hooks, or particles/physics creation,
@@ -82,7 +82,7 @@ understand → locate → plan → change → verify (check.sh) → deploy? → 
 ## Reading big files efficiently
 
 - `Player.log` is often over 1 MB: `grep -n -E 'Exception|Error|<ModName>|Fusion' Player.log | tail -50`.
-- `.game/assembly-csharp-dump.txt` is hundreds of KB: grep for the type, then read only those lines.
+- `../decomp/<game>/assembly-csharp-dump.txt` is hundreds of KB: grep for the type, then read only those lines.
 - Interop signatures: `~/.dotnet/tools/ilspycmd -t Il2Cpp.<Type> <Il2CppAssemblies>/Assembly-CSharp.dll`.
 
 ## Definition of done

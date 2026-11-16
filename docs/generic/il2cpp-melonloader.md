@@ -20,8 +20,10 @@ interop assemblies (`<game>/MelonLoader/Il2CppAssemblies/`) with **signatures on
 ~/.dotnet/tools/ilspycmd -t Il2Cpp.SomeType "<game>/MelonLoader/Il2CppAssemblies/Assembly-CSharp.dll"
 ```
 
-Each game layer has a `regen-decomp.sh` that writes these into `.game/` (git-ignored, because the
-game's code is the developer's copyright and must never be committed).
+Each game layer has a `regen-decomp.sh` that writes these into `../decomp/<game>/`, a plain folder
+next to the repo clones (`~/projects/mods/wwthp/decomp/`), never inside a repo. The output is
+interop stubs (signatures plus calls into native code), not the game's logic, but it is still the
+developer's copyright: use it only for interoperability and never commit or share it.
 
 ### Step 2: Check that the Unity API exists in *this* build
 

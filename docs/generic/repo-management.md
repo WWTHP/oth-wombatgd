@@ -82,7 +82,7 @@ Add `docs/games/<game>/README.md` (environment, rules, classes, registry) and
   ≤72 chars, body explains why. One logical change per commit. `tools/check.sh` green at each commit.
 - PRs: conventional title, fill in the template (verified / needs in-game testing / knowledge).
   Squash WIP branches; merge clean histories as they are.
-- Never commit: build output, `.venv`, `.game/` (decompiled game code), the game's DLLs, secrets.
+- Never commit: build output, `.venv`, decompiled game code (it lives in `wwthp/decomp/`, outside every repo), the game's DLLs, secrets.
 - Media goes through Git LFS (`.gitattributes`). Run `git lfs install` once per machine.
 
 ## Agent permissions in WWTHP
