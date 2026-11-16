@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Core sources are compiled INTO the test assembly (see the test .csproj),
+  so coverage must include the test assembly and then exclude the test classes.
+  Used by tools/check.sh (dotnet test with the XPlat Code Coverage collector and these settings).
+-->
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat code coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+          <IncludeTestAssembly>true</IncludeTestAssembly>
+          <ExcludeByFile>**/tests/**/*Tests.cs,**/Microsoft.NET.Test.Sdk.Program.cs</ExcludeByFile>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+</RunSettings>

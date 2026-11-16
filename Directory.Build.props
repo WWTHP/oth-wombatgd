@@ -1,0 +1,14 @@
+<Project>
+  <!-- Applies to every .csproj under this folder (mods and tests). -->
+  <PropertyGroup>
+    <LangVersion>latest</LangVersion>
+    <EnableNETAnalyzers>true</EnableNETAnalyzers>
+    <AnalysisLevel>latest-recommended</AnalysisLevel>
+    <!-- Run the .editorconfig style rules (IDExxxx) during build, not only in the IDE. -->
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <!-- -p:StrictBuild=true (used by tools/check.sh) turns warnings into errors; normal builds stay usable. -->
+    <TreatWarningsAsErrors Condition="'$(StrictBuild)' == 'true'">true</TreatWarningsAsErrors>
+    <Deterministic>true</Deterministic>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,23 @@
+# Build output
+bin/
+obj/
+TestResults/
+
+# Python
+.venv/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.coverage
+
+# The game's code (Funselektor's copyright): regenerate with tools/games/<game>/regen-decomp.sh
+.game/
+assembly-csharp-dump.txt
+decomp/
+
+# Editors / OS
+.vs/
+.vscode/
+.idea/
+*.swp
+.DS_Store

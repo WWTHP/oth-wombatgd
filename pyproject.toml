@@ -1,0 +1,55 @@
+# Python tooling for tools/ (helper, asset generation and analysis scripts). Template-managed.
+# Not a package: scripts are run as `.venv/bin/python tools/<script>.py`.
+# Dev dependencies are pinned in requirements-dev.txt.
+
+[tool.ruff]
+target-version = "py312"
+line-length = 110
+src = ["tools", "tests/python"]
+extend-exclude = [".game", "skeleton"]
+
+[tool.ruff.lint]
+select = [
+    "E", "W",   # pycodestyle
+    "F",        # pyflakes
+    "I",        # import sorting
+    "B",        # bugbear
+    "UP",       # pyupgrade
+    "N",        # pep8-naming
+    "SIM",      # simplify
+    "S",        # bandit (security)
+    "NPY",      # numpy-specific
+    "RUF",
+]
+ignore = [
+    "S603", "S607",  # subprocess calls to ffmpeg/ffprobe with fixed argument lists are intended
+    "N803", "N806",  # DSP code uses math-style capitals (X = FFT of x)
+    "RUF001", "RUF002", "RUF003",  # unicode in comments/docstrings (deg, ±)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S101"]  # assert is how pytest works
+
+[tool.ruff.format]
+quote-style = "double"
+
+[tool.pytest.ini_options]
+testpaths = ["tests/python"]
+pythonpath = ["tools"]
+addopts = "-q --strict-markers"
+
+[tool.coverage.run]
+source = ["tools"]
+
+[tool.coverage.report]
+# CLI glue (argument parsing, ffmpeg/ffprobe subprocesses, file writing) is exercised by
+# running the tools, not by unit tests. Everything else counts.
+exclude_also = [
+    "def main\\(",
+    "if __name__ == .__main__.:",
+    "def decode\\(",
+    "def load\\(",
+]
+omit = ["tools/dump_types.py"]  # pure CLI wrapper around dnfile
+fail_under = 80
+show_missing = true

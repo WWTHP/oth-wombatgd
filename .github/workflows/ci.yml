@@ -1,0 +1,36 @@
+# Template-managed. Runs tools/check.sh without the game: lint, Python tests, Core unit tests,
+# coverage. Mod projects can't build here (no game DLLs) and are reported as SKIPPED.
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: false   # unit tests don't need media; saves LFS bandwidth
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "10.0.x"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Python dev dependencies
+        run: python -m pip install -r requirements-dev.txt
+      - name: tools/check.sh
+        env:
+          PYTHON: python
+        run: tools/check.sh

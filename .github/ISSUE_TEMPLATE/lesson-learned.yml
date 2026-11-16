@@ -1,0 +1,42 @@
+name: Lesson learned
+description: Something broke (or worked) in a way future mods should know about
+title: "lesson: "
+labels: [lesson-learned]
+body:
+  - type: dropdown
+    id: layer
+    attributes:
+      label: Layer
+      description: Where the knowledge belongs
+      options:
+        - generic (any Unity IL2CPP / MelonLoader mod)
+        - game (Over the Hill specific)
+        - project (only this mod)
+    validations:
+      required: true
+  - type: textarea
+    id: symptom
+    attributes:
+      label: Symptom
+      description: What was observed (log lines, crash, hang)
+    validations:
+      required: true
+  - type: textarea
+    id: cause
+    attributes:
+      label: Cause found
+      description: How it was confirmed (CrashGuard marker, Player.log, bisecting builds)
+    validations:
+      required: true
+  - type: textarea
+    id: rule
+    attributes:
+      label: Rule / lesson
+      description: What to do (or never do) from now on
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Where it happened
+      description: Repo, version, PR

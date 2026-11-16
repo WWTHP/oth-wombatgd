@@ -1,0 +1,106 @@
+# Coding style for the Over the Hill mods. See docs/coding-standards.md.
+root = true
+
+[*]
+charset = utf-8
+end_of_line = lf
+insert_final_newline = true
+trim_trailing_whitespace = true
+indent_style = space
+indent_size = 4
+
+[*.{csproj,props,targets,xml,json,yml,yaml}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[*.py]
+indent_size = 4
+max_line_length = 110
+
+# ---------------------------------------------------------------- C#
+[*.cs]
+max_line_length = 120
+
+# Layout: Allman braces, file-scoped usings outside the namespace
+csharp_new_line_before_open_brace = all
+csharp_new_line_before_else = true
+csharp_new_line_before_catch = true
+csharp_new_line_before_finally = true
+csharp_indent_case_contents = true
+csharp_indent_case_contents_when_block = false
+csharp_preserve_single_line_statements = true
+csharp_preserve_single_line_blocks = true
+csharp_using_directive_placement = outside_namespace:warning
+dotnet_sort_system_directives_first = true
+
+# Language preferences
+csharp_style_var_for_built_in_types = true:silent
+csharp_style_var_when_type_is_apparent = true:silent
+csharp_prefer_simple_using_statement = true:suggestion
+csharp_style_expression_bodied_methods = when_on_single_line:silent
+csharp_style_pattern_matching_over_as_with_null_check = true:suggestion
+dotnet_style_readonly_field = true:suggestion
+dotnet_style_require_accessibility_modifiers = for_non_interface_members:warning
+dotnet_style_qualification_for_field = false:suggestion
+csharp_prefer_braces = when_multiline:suggestion
+
+# Unused code
+dotnet_diagnostic.IDE0005.severity = suggestion   # unnecessary using (needs GenerateDocumentationFile to be a build warning)
+dotnet_diagnostic.IDE0051.severity = warning      # unused private member
+dotnet_diagnostic.IDE0052.severity = suggestion   # private member assigned but never read
+dotnet_diagnostic.IDE0060.severity = suggestion   # unused parameter (Harmony patches need exact names)
+
+# Naming
+#   types, methods, properties, events, public/internal fields: PascalCase
+#   private static mutable fields: _camelCase      (e.g. _slot, _next)
+#   private static readonly fields: PascalCase     (e.g. Inbox, Peers)
+#   locals and parameters: camelCase
+dotnet_naming_symbols.types_and_members.applicable_kinds = class, struct, interface, enum, method, property, event, delegate
+dotnet_naming_style.pascal.capitalization = pascal_case
+dotnet_naming_rule.types_pascal.symbols = types_and_members
+dotnet_naming_rule.types_pascal.style = pascal
+dotnet_naming_rule.types_pascal.severity = warning
+
+dotnet_naming_symbols.private_static_mutable.applicable_kinds = field
+dotnet_naming_symbols.private_static_mutable.applicable_accessibilities = private
+dotnet_naming_symbols.private_static_mutable.required_modifiers = static
+dotnet_naming_style.underscore_camel.capitalization = camel_case
+dotnet_naming_style.underscore_camel.required_prefix = _
+dotnet_naming_rule.private_static_mutable.symbols = private_static_mutable
+dotnet_naming_rule.private_static_mutable.style = underscore_camel
+dotnet_naming_rule.private_static_mutable.severity = suggestion
+
+dotnet_naming_symbols.locals.applicable_kinds = parameter, local
+dotnet_naming_style.camel.capitalization = camel_case
+dotnet_naming_rule.locals_camel.symbols = locals
+dotnet_naming_rule.locals_camel.style = camel
+# suggestion, not warning: Harmony requires parameters named __instance / __result
+dotnet_naming_rule.locals_camel.severity = suggestion
+
+# Analyzer rules that don't fit IL2CPP modding.
+# Il2CppInterop types are generated; Unity/IL2CPP require mutable public fields and static state.
+dotnet_diagnostic.CA1051.severity = none   # visible instance fields (Profile, settings structs)
+dotnet_diagnostic.CA1707.severity = none   # underscores in identifiers (Il2Cpp names)
+dotnet_diagnostic.CA1716.severity = none   # identifiers that are keywords in other languages
+dotnet_diagnostic.CA1805.severity = none   # explicit default initialisation is clearer here
+dotnet_diagnostic.CA1810.severity = none   # static constructors
+dotnet_diagnostic.CA1822.severity = suggestion  # Harmony patch methods must stay as declared
+dotnet_diagnostic.CA2211.severity = none   # non-constant public static fields (MelonPreferences entries)
+dotnet_diagnostic.CA1031.severity = none   # catching general exceptions is REQUIRED in native callbacks
+dotnet_diagnostic.CA5394.severity = none   # System.Random is fine for gameplay randomness
+dotnet_diagnostic.CA1305.severity = suggestion  # culture in string formatting (log text only)
+dotnet_diagnostic.CA1310.severity = suggestion
+dotnet_diagnostic.CA1304.severity = suggestion
+dotnet_diagnostic.CA1311.severity = suggestion
+
+# Correctness rules worth failing on
+dotnet_diagnostic.CA2000.severity = suggestion  # dispose: IL2CPP objects are GC-owned by the game
+dotnet_diagnostic.CA2200.severity = warning     # rethrow loses stack trace
+dotnet_diagnostic.CA2201.severity = suggestion  # reserved exception types
+dotnet_diagnostic.CS8600.severity = none        # nullable is disabled in mods
+
+[tests/**.cs]
+dotnet_diagnostic.CA1707.severity = none   # test names use underscores
+dotnet_naming_rule.types_pascal.severity = none

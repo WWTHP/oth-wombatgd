@@ -1,0 +1,51 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <!--
+    MelonLoader (IL2CPP) mod. Created from WWTHP/mod-template by tools/new-mod.sh.
+    Build + deploy to the game:   dotnet build -c Release
+    Build only (checks, CI):      dotnet build -c Release -p:Deploy=false
+    Other game install:           -p:GameDir="/path/to/game"
+  -->
+  <PropertyGroup>
+    <TargetFramework>net6.0</TargetFramework>
+    <Nullable>disable</Nullable>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <AssemblyName>ModName</AssemblyName>
+    <RootNamespace>ModName</RootNamespace>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <!-- Default: Over the Hill under Flatpak Steam. See docs/games/<game>/README.md. -->
+    <GameDir Condition="'$(GameDir)' == ''">$(HOME)/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/common/over the hill</GameDir>
+    <MLDir>$(GameDir)/MelonLoader</MLDir>
+    <InteropDir>$(MLDir)/Il2CppAssemblies</InteropDir>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Reference Include="MelonLoader"><HintPath>$(MLDir)/net6/MelonLoader.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="0Harmony"><HintPath>$(MLDir)/net6/0Harmony.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Il2CppInterop.Runtime"><HintPath>$(MLDir)/net6/Il2CppInterop.Runtime.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Il2CppInterop.Common"><HintPath>$(MLDir)/net6/Il2CppInterop.Common.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Il2Cppmscorlib"><HintPath>$(InteropDir)/Il2Cppmscorlib.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Assembly-CSharp"><HintPath>$(InteropDir)/Assembly-CSharp.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.CoreModule"><HintPath>$(InteropDir)/UnityEngine.CoreModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="UnityEngine.IMGUIModule"><HintPath>$(InteropDir)/UnityEngine.IMGUIModule.dll</HintPath><Private>false</Private></Reference>
+    <Reference Include="Unity.InputSystem"><HintPath>$(InteropDir)/Unity.InputSystem.dll</HintPath><Private>false</Private></Reference>
+    <!-- Add only what you use, e.g. UnityEngine.PhysicsModule, UnityEngine.ParticleSystemModule,
+         Il2CppFMOD / Il2CppFMODUnity (audio), Il2CppFusion.Runtime/.Common/.Sockets (multiplayer). -->
+  </ItemGroup>
+
+  <!-- Copy the built mod into the game's Mods folder (skipped with -p:Deploy=false) -->
+  <Target Name="DeployToGame" AfterTargets="Build" Condition="'$(Deploy)' != 'false' And Exists('$(GameDir)/Mods')">
+    <Copy SourceFiles="$(TargetPath)" DestinationFolder="$(GameDir)/Mods" />
+  </Target>
+
+  <!-- UnityEngine.CoreModule ships its own UnmanagedCallersOnlyAttribute; alias the real one
+       (use `extern alias sysinterop;` in files with native detours). -->
+  <Target Name="AliasInteropServices" AfterTargets="ResolveAssemblyReferences">
+    <ItemGroup>
+      <ReferencePath Condition="'%(Filename)' == 'System.Runtime.InteropServices'">
+        <Aliases>global,sysinterop</Aliases>
+      </ReferencePath>
+    </ItemGroup>
+  </Target>
+
+</Project>
