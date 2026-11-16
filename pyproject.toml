@@ -6,7 +6,7 @@
 target-version = "py312"
 line-length = 110
 src = ["tools", "tests/python"]
-extend-exclude = [".game", "skeleton"]
+extend-exclude = ["skeleton"]
 
 [tool.ruff.lint]
 select = [

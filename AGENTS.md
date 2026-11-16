@@ -57,7 +57,7 @@ Each one comes from a real crash or hang. The game layer adds game-specific rule
 9. **Wrap risky stages in `CrashGuard`.**
 10. **Guard engine calls that throw while loading** with try/catch.
 11. **Parsers of untrusted input live in `Core/`** with full malformed-input tests. They reject, never coerce.
-12. **Never commit the game's code** (decompiled sources, dumps, DLLs). They stay in git-ignored `.game/`.
+12. **Never commit the game's code** (decompiled sources, dumps, DLLs). They live in `../decomp/<game>/` (next to the repo clones, not a repo), written by `tools/games/<game>/regen-decomp.sh`.
 13. **Licences**: only CC0/CC BY (or own) media, recorded in `SOURCES.md`, credits shipped.
 14. **Don't weaken a check** (analyzer rule, threshold, assertion) to make it pass without telling the user why.
 15. **Don't edit template-managed files in a mod repo** (`.template-manifest`). Change the template.

@@ -26,7 +26,15 @@ game are named `oth-*`, carry the topic `over-the-hill`, and are tracked on the
 | SDK | `dotnet-sdk-10.0` from dnf (builds `net6.0`). Agents can't run `dotnet-install.sh`; installs go through the user. |
 | Game process | `pgrep -fa 'over the hill'` (don't deploy while it runs) |
 
-Regenerate the local game-code reference (git-ignored): `tools/games/over-the-hill/regen-decomp.sh`.
+Game-code reference (interop stubs: signatures plus calls into native code, no game logic):
+`tools/games/over-the-hill/regen-decomp.sh` writes `~/projects/mods/wwthp/decomp/over-the-hill/`
+(`assembly-csharp-dump.txt`, `types/*.cs`). It's outside every repo; the script refuses to write inside one.
+
+Legal position (not legal advice): reading interop stubs to make mods interoperate is the
+interoperability case that US fair use (*Sega v. Accolade*, *Sony v. Connectix*, DMCA §1201(f))
+and the EU Software Directive Art. 6 protect. The open risk is contractual. **Before publishing
+any mod, check the game's EULA and Funselektor's stated stance on mods** and record it here.
+Not yet checked (2026-11-15).
 
 Workstation notes: interactive `cp` is aliased to `cp -i` and `rm` moves to the trash. Use
 `\cp -f` / `\rm -rf` in agent one-liners.
