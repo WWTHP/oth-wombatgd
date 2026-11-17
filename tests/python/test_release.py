@@ -1,3 +1,4 @@
+import zipfile
 from pathlib import Path
 
 import pytest
@@ -41,24 +42,123 @@ def test_pick_mod_ambiguous_or_missing_raises(mods, wanted):
         release.pick_mod(mods, wanted)
 
 
-def test_parse_version_mod_cs_returns_version():
+def test_find_version_mod_cs_const_returns_version():
     src = 'public sealed class Mod : MelonMod\n{\n    public const string Version = "0.2.2";\n}\n'
 
-    assert release.parse_version(src) == "0.2.2"
+    assert release.find_version([src]) == "0.2.2"
+
+
+def test_find_version_meloninfo_literal_returns_version():
+    src = '[assembly: MelonInfo(typeof(WombatGD.WombatGDMod), "WombatGD", "0.5.4", "jims")]'
+
+    assert release.find_version(["// other file", src]) == "0.5.4"
+
+
+def test_find_version_const_and_meloninfo_referencing_it_returns_version():
+    srcs = [
+        '[assembly: MelonInfo(typeof(M.Mod), "M", M.Mod.Version, "WWTHP")]\n'
+        'public const string Version = "1.2.3";'
+    ]
+
+    assert release.find_version(srcs) == "1.2.3"
 
 
 @pytest.mark.parametrize(
-    "src",
+    "srcs",
     [
-        "no version here",
-        'public const string Version = "1.2";',  # not x.y.z
-        'public const string Version = "1.2.3-beta";',
-        'const string Version = "1.0.0"; const string Version = "2.0.0";',  # ambiguous
+        [],
+        ["no version here"],
+        ['public const string Version = "1.2";'],  # not x.y.z
+        ['public const string Version = "1.2.3-beta";'],
+        ['const string Version = "1.0.0";', 'const string Version = "2.0.0";'],  # disagree
+        ['const string Version = "1.0.0";', '[assembly: MelonInfo(typeof(X), "X", "1.0.1", "a")]'],
     ],
 )
-def test_parse_version_missing_or_malformed_raises(src):
+def test_find_version_missing_malformed_or_conflicting_raises(srcs):
     with pytest.raises(ValueError):
-        release.parse_version(src)
+        release.find_version(srcs)
+
+
+def test_parse_release_files_valid_lines_return_entries():
+    text = """
+# assets the mod loads from UserData
+assets/smoke/*.rgba -> UserData/WombatGD/Smoke
+assets/sounds/loops/*   ->   UserData/WombatGD/Sounds/   # trailing slash ok
+"""
+
+    assert release.parse_release_files(text) == [
+        ("assets/smoke/*.rgba", "UserData/WombatGD/Smoke"),
+        ("assets/sounds/loops/*", "UserData/WombatGD/Sounds"),
+    ]
+
+
+def test_parse_release_files_backslashes_normalised():
+    assert release.parse_release_files("a/b.txt -> UserData\\X") == [("a/b.txt", "UserData/X")]
+
+
+def test_parse_release_files_empty_returns_nothing():
+    assert release.parse_release_files("\n# only a comment\n") == []
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        "assets/x.wav",  # no arrow
+        "assets/x.wav -> ",  # no folder
+        " -> UserData/X",  # no source
+        "a -> b -> c",
+        "/etc/passwd -> UserData/X",  # absolute source
+        "assets/x.wav -> /tmp",  # absolute folder
+        "../secret -> UserData/X",  # escapes the repo
+        "assets/x.wav -> UserData/../../Windows",  # escapes the game folder
+        "assets/x.wav -> C:/Games",  # drive letter
+    ],
+)
+def test_parse_release_files_malformed_or_escaping_rejected(line):
+    with pytest.raises(ValueError, match="line 1"):
+        release.parse_release_files(line)
+
+
+def test_plan_package_places_dll_in_mods_and_files_in_folders(tmp_path):
+    dll = tmp_path / "M.dll"
+    a = tmp_path / "a.wav"
+
+    plan = release.plan_package(dll, [(a, "UserData/M/Sounds")])
+
+    assert [arc for _, arc in plan] == ["Mods/M.dll", "UserData/M/Sounds/a.wav"]
+
+
+def test_plan_package_same_target_twice_raises(tmp_path):
+    a1 = tmp_path / "one" / "a.wav"
+    a2 = tmp_path / "two" / "a.wav"
+
+    with pytest.raises(ValueError, match="collide"):
+        release.plan_package(tmp_path / "M.dll", [(a1, "UserData/X"), (a2, "UserData/X")])
+
+
+def test_write_zip_contains_planned_files_with_content(tmp_path):
+    dll = tmp_path / "M.dll"
+    dll.write_bytes(b"dll")
+    wav = tmp_path / "a.wav"
+    wav.write_bytes(b"wav")
+    out = tmp_path / "M-1.0.0.zip"
+
+    release.write_zip(out, [(dll, "Mods/M.dll"), (wav, "UserData/M/a.wav")])
+
+    with zipfile.ZipFile(out) as z:
+        assert z.namelist() == ["Mods/M.dll", "UserData/M/a.wav"]
+        assert z.read("UserData/M/a.wav") == b"wav"
+
+
+def test_write_zip_same_input_gives_identical_bytes(tmp_path):
+    f = tmp_path / "M.dll"
+    f.write_bytes(b"x")
+    z1, z2 = tmp_path / "1.zip", tmp_path / "2.zip"
+
+    release.write_zip(z1, [(f, "Mods/M.dll")])
+    release.write_zip(z2, [(f, "Mods/M.dll")])
+
+    assert z1.read_bytes() == z2.read_bytes()
 
 
 README = """# Project
@@ -149,3 +249,11 @@ def test_build_notes_without_melonloader_omits_version():
 
     assert "into the game." in notes
     assert "version" not in notes.split("\n")[1]
+
+
+def test_build_notes_package_says_unzip_and_hashes_zip():
+    notes = release.build_notes("W", "0.5.5", None, "ff", "0.7.3", "W-0.5.5.zip")
+
+    assert "Unzip `W-0.5.5.zip` into the game folder" in notes
+    assert "`W-0.5.5.zip` SHA-256: `ff`" in notes
+    assert "Mods/` folder (replace" not in notes
