@@ -1,0 +1,4 @@
+# Files WombatGD loads from UserData; tools/release.py zips them with the DLL.
+# <glob relative to the repo> -> <folder relative to the game>
+assets/smoke/*.rgba    -> UserData/WombatGD/Smoke
+assets/sounds/loops/*  -> UserData/WombatGD/Sounds
