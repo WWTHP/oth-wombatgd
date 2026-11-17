@@ -107,3 +107,45 @@ def test_sha256_of_file_matches_known_digest(tmp_path):
     f.write_bytes(b"abc")
 
     assert release.sha256_of(f) == "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad"
+
+
+@pytest.mark.parametrize(
+    "text",
+    [
+        "- MelonLoader **v0.7.3**. Mods target net6.0",
+        "MelonLoader 0.7.3 is required",
+        "MelonLoader v0.7.3",
+    ],
+)
+def test_melonloader_version_game_notes_returns_version(text):
+    assert release.melonloader_version([text]) == "0.7.3"
+
+
+def test_melonloader_version_same_version_twice_returns_it():
+    assert release.melonloader_version(["MelonLoader **v0.7.3**", "uses MelonLoader v0.7.3"]) == "0.7.3"
+
+
+@pytest.mark.parametrize(
+    "notes",
+    [
+        [],
+        ["no loader mentioned"],
+        ["MelonLoader **v0.7**"],  # not x.y.z
+        ["MelonLoader v0.7.3", "MelonLoader v0.6.1"],  # two games disagree
+    ],
+)
+def test_melonloader_version_missing_or_ambiguous_returns_none(notes):
+    assert release.melonloader_version(notes) is None
+
+
+def test_build_notes_with_melonloader_names_version():
+    notes = release.build_notes("M", "1.0.0", None, "00", "0.7.3")
+
+    assert "into the game (version **0.7.3**)." in notes
+
+
+def test_build_notes_without_melonloader_omits_version():
+    notes = release.build_notes("M", "1.0.0", None, "00")
+
+    assert "into the game." in notes
+    assert "version" not in notes.split("\n")[1]
