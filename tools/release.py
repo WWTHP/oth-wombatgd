@@ -7,8 +7,9 @@ CI can't build mods (no game DLLs), so releases are built on a machine with the 
 The tool refuses unless: on `main`, clean, level with `origin/main`, the tag `v<version>` doesn't
 exist yet (bump `Mod.Version` first), and `tools/check.sh` passes. It then builds
 `<Mod>/<Mod>.csproj` in Release without deploying and runs `gh release create v<version>`. The
-DLL is attached. The notes hold install steps, this version's changelog row from
-`docs/project/README.md`, the DLL's SHA-256, and GitHub's generated list of merged PRs.
+DLL is attached. The notes hold install steps (with the MelonLoader version named in
+`docs/games/<game>/README.md`), this version's changelog row from `docs/project/README.md`, the
+DLL's SHA-256, and GitHub's generated list of merged PRs.
 
 Publishing is outward-facing: agents run it only when the user asks for a release.
 """
@@ -23,6 +24,7 @@ import sys
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
+ML_RE = re.compile(r"MelonLoader\s+\**v?(\d+\.\d+\.\d+)\**")
 VERSION_RE = re.compile(r'const\s+string\s+Version\s*=\s*"(\d+\.\d+\.\d+)"')
 SKIP_DIRS = {"tests", "skeleton"}
 
@@ -62,12 +64,23 @@ def changelog_entry(readme: str, version: str) -> str | None:
     return m.group(1).strip() if m else None
 
 
-def build_notes(mod: str, version: str, change: str | None, sha256: str) -> str:
+def melonloader_version(game_notes: list[str]) -> str | None:
+    """
+    The MelonLoader version the game layer names (`MelonLoader **v0.7.3**` in
+    `docs/games/<game>/README.md`). None unless the notes agree on exactly one version.
+    """
+    found = {m for text in game_notes for m in ML_RE.findall(text)}
+    return found.pop() if len(found) == 1 else None
+
+
+def build_notes(
+    mod: str, version: str, change: str | None, sha256: str, melonloader: str | None = None
+) -> str:
     """Release notes (Markdown). GitHub's generated PR list is appended by `gh`."""
+    ml = f" (version **{melonloader}**)" if melonloader else ""
     lines = [
         f"## Install {mod} {version}",
-        "1. Install [MelonLoader](https://github.com/LavaGang/MelonLoader) into the game "
-        "(version: see the game notes in `docs/games/`).",
+        f"1. Install [MelonLoader](https://github.com/LavaGang/MelonLoader) into the game{ml}.",
         f"2. Put `{mod}.dll` into the game's `Mods/` folder (replace any older copy).",
         "3. Start the game. Settings are in `UserData/MelonPreferences.cfg`.",
         "",
@@ -138,7 +151,13 @@ def main() -> None:
     if not dll.is_file():
         raise SystemExit(f"release: build produced no {dll.relative_to(ROOT)} (is the game installed?)")
 
-    notes = build_notes(mod, version, change, sha256_of(dll))
+    game_notes = [
+        p.read_text(encoding="utf-8") for p in sorted((ROOT / "docs" / "games").glob("*/README.md"))
+    ]
+    melonloader = melonloader_version(game_notes)
+    if melonloader is None:
+        print("release: warning: no single MelonLoader version in docs/games/*/README.md", file=sys.stderr)
+    notes = build_notes(mod, version, change, sha256_of(dll), melonloader)
     cmd = [
         "gh", "release", "create", tag, str(dll),
         "--target", head, "--title", f"{mod} {version}", "--notes", notes, "--generate-notes",
