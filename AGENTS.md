@@ -40,6 +40,9 @@ cd <Mod> && dotnet build -c Release -p:Deploy=false    # build only
 Deploying changes the user's live game. Only do it when they're about to test, never while the
 game runs, and bump the mod version first.
 
+Release (GitHub release with the DLL attached, only when the user asks):
+`.venv/bin/python tools/release.py --dry-run`, then without `--dry-run`. Details: repo-management.md §Releases.
+
 ## Non-negotiable rules (generic)
 
 Each one comes from a real crash or hang. The game layer adds game-specific rules.

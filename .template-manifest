@@ -1,7 +1,7 @@
 # Paths owned by WWTHP/mod-template. tools/template-sync.sh mirrors them into mod repos.
 # Edit these in mod-template (via PR), never in a mod repo.
-# Project-owned (never synced): README.md, docs/project/, <Mod>/, tests/<Mod>.Tests/, tests/python/,
-# assets/, project-specific tools/*.py, requirements-dev.txt additions (see docs/generic/repo-management.md).
+# Project-owned (never synced): README.md, docs/project/, <Mod>/, tests/<Mod>.Tests/, tests/python/ (except the
+# template tool tests listed below), assets/, project-specific tools/*.py, requirements-dev.txt additions (see docs/generic/repo-management.md).
 .template-manifest
 AGENTS.md
 CLAUDE.md
@@ -19,5 +19,7 @@ tools/check.sh
 tools/new-mod.sh
 tools/template-sync.sh
 tools/dump_types.py
+tools/release.py
+tests/python/test_release.py
 tools/games
 .github
