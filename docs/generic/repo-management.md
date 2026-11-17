@@ -89,8 +89,20 @@ git switch main && git pull
 
 `tools/release.py` refuses unless the checkout is on `main`, clean and level with `origin/main`,
 the tag `v<Mod.Version>` doesn't exist yet, and `tools/check.sh` passes. The notes contain install
-steps, this version's changelog row, the DLL's SHA-256 and GitHub's list of merged PRs. `--mod
-<Name>` picks one when a repo has several mods.
+steps, this version's changelog row, the SHA-256 and GitHub's list of merged PRs. `--mod
+<Name>` picks one when a repo has several mods. The version comes from `const string Version` or
+the `MelonInfo` literal.
+
+Mods that load files from `UserData/` list them in a project-owned `release-files.txt`. The
+release is then a zip laid out like the game folder, so players unzip it into the game:
+
+```text
+# <glob relative to the repo> -> <folder relative to the game>
+assets/smoke/*.rgba    -> UserData/WombatGD/Smoke
+assets/sounds/loops/*  -> UserData/WombatGD/Sounds
+```
+
+Ship licence/credit files with media (e.g. `CREDITS.txt` in the same folder), see AGENTS rule 13.
 
 - Release only when the user asks: it's outward-facing.
 - Repos are private, so only people with access to the repo can download releases. Making a repo public is
