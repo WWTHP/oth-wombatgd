@@ -70,7 +70,33 @@ Workstation notes: interactive `cp` is aliased to `cp -i` and `rm` moves to the 
 | `NetworkRunner` (Fusion) | `SendReliableDataToServer(ReliableKey, ReadOnlySpan<byte>)`, `SendReliableDataToPlayer(PlayerRef, …)`, `IsServer`, `IsSinglePlayer`, `Topology`, `LocalPlayer`, `ActivePlayers` |
 | `ChallengeTrail`, `ChallengeTrailInfo` | challenge trail waypoints (used for yeti placement) |
 | `CarKicker` | seen in the decompiled sources (impulses to cars); not used by a mod yet |
+| `CarDamageSystem` | per car: `DamageAmount`, `MaxDamageAmount`, `vehicle` (VPP `VPVehicleController`), `damageEffects`, `originalSpeedLimit`, `originalMaxTorque`, `ApplyDriveabilityDebuffs()`/`ResetDriveabilityDebuffs()`, `HealOnCabinArrival`, `OnPOIReached(PointOfInterest)` |
+| `DamageEffects` | ScriptableObject: `AnimationCurve` `maxSpeedMultiplier`, `accelerationMultiplier`, `torqueMultiplier` (damage → driveability). Worst case seen on the Wombat: speed x0.50, torque x0.80 |
+| `Il2CppVehiclePhysics.VPVehicleController` (in Assembly-CSharp) | `speedControl` (`speedLimiter`, `speedLimit`), `engine` (`peakRpmTorque`, `torqueCap`, `torqueCapLimit`, …), runtime `m_engine.throttleInput` |
+| `PointOfInterest` | `Info.Type` (`PointOfInterestType`: Generic, Cabin, Merchant, Scenic, Trail, Portal, ItemRecovery, Puzzle). Houses are `Cabin : SpawnablePointOfInterest` |
+| `VehicleUpgradeObject` | mounted part on a car: `VehiclePartReference` (`VehiclePartSO`; `VehicleCosmetic.CosmeticType`). Side jerry cans exist as `Side_Jerry Cans` / `Side_Jerrycan` in the assets |
+| `Odometer` | per car: `mTravelled` (metres) |
+| `ContextUIInclineIndicator` | the two bottom-left tilt dials (HUD). Only `SetIncline`/`SetEnabled`: driven from outside, so a clone with the component removed stays still. See §HUD |
+| `CarHealthUI`, `ContextUIEngineRPMDisplay`, `ContextUIOdometerPanel` | HUD panels. `CarHealthUI`'s rect is a full-screen container; the RPM display sits bottom right. Neither is a good placement anchor. `ContextUIEngineRPMDisplay : UIContainer` needs a reference to `Il2CppFunselektor.FunCore.Runtime` |
 | Terrain layers | snow detection by layer name keywords (`snow`, `ice`, `glacier`, `frost`) |
+
+## HUD (uGUI)
+
+- Screen-space HUD. On 3440x1440 the tilt dials are at (144,1176) and (347,1176), 187x160 px each.
+  Canvas units ≈ 1080p pixels (a 140x120 dial renders at 187x160 on 1440p).
+- Tilt dial parts (`RollIndicator`, and the pitch twin): `Mask/{BlurredBackground (sprite
+  InclineIndicator-Mask, TranslucentImage), RotatingPart/{Terrain, Sky (InclineIndicator-Bottom,
+  white/black α0.4), GroundLine (RawImage 140x2), Car (InclineIndicator-CarBack)}, Border, Lines
+  (side ticks only)}`. The parent has no LayoutGroup.
+- HUD font: TMP `NunitoSans-Bold SDF` (e.g. from `ContextUIEngineRPMDisplay`'s TMP text).
+- **To add a HUD element in the game's style, clone a stock one** (oth-fuel-management
+  `StockDial.cs`). Instantiate it under an inactive holder GameObject, `DestroyImmediate` the game's
+  logic component, reparent next to the original, and mirror its `activeInHierarchy`. Add
+  `Image`/`TextMeshProUGUI` children for your own content. A look-alike drawn with IMGUI was
+  rejected in testing: hard to read, off-style. Needs refs `UnityEngine.UI`, `Unity.TextMeshPro`
+  (`Il2CppTMPro`), and `UnityEngine.TextRenderingModule` for `TextAnchor`.
+- To find a HUD element's on-screen rect: `RectTransform.GetWorldCorners` →
+  `RectTransformUtility.WorldToScreenPoint` (null camera for overlay canvases).
 
 Vehicle hierarchy (seen on the Wombat): cosmetic parts under `Visual/` (e.g. `Visual/Antenna`), colliders
 under `Collider/` (cab: `Collider/Top`, a MeshCollider). Wobbly parts use a Rigidbody + ConfigurableJoint.
@@ -100,6 +126,7 @@ adapt `Settings`/`Mod` references and `Describe()`.
 | --- | --- | --- | --- | --- | --- |
 | `oth-wombatgd` | WombatGD | F7 menu, F8 engine sound cycle, F9 smoke screen | `"WGGD"` `0x57474744` | 1 | `WombatGD/` |
 | `oth-abominable-snowman` | AbominableSnowman | F6 menu | `"YETI"` `0x49544559` | 1 | `AbominableSnowman/` |
+| `oth-fuel-management` | FuelManagement | F10 menu, F11 (hold) siphon | `"FUEL"` `0x4C455546` | 1 | `FuelManagement/` (CrashGuard only) |
 
 Taken by third-party mods the user runs: `OTHNight`, `ImmersiveFirstPersonView`, `OTH.CosmeticStacker`
 (no networking). Pick unused keys; make every key configurable.

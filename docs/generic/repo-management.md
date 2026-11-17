@@ -36,7 +36,7 @@ Every repo has the same three layers. Agents read them in this order:
   `mod-template` instead.
 - `.template-version` records the template commit the repo was last synced to.
 - Project-owned: `README.md`, `docs/project/`, the mod folder(s), `tests/<Mod>.Tests/`,
-  `tests/python/`, `assets/`, project tools (`tools/*.py` that aren't in the manifest), and
+  `tests/python/` (except the template's own tool tests listed in the manifest, e.g. `test_release.py`), `assets/`, project tools (`tools/*.py` that aren't in the manifest), and
   `requirements-dev.txt` (starts as the template's copy. Keep the template's pins and add your own).
 
 ## Flows
@@ -74,6 +74,27 @@ gh project item-add <board number> --owner WWTHP --url <issue url>   # track wor
 ### New game
 Add `docs/games/<game>/README.md` (environment, rules, classes, registry) and
 `tools/games/<game>/regen-decomp.sh` to the template, plus a board and a prefix.
+
+## Releases
+
+CI can't build mods (no game DLLs in CI), so releases are built on a machine with the game
+installed, from `main`:
+
+```bash
+# 1. bump Mod.Version + add the changelog row in docs/project/README.md, PR, merge
+git switch main && git pull
+.venv/bin/python tools/release.py --dry-run   # checks + build, prints the notes, publishes nothing
+.venv/bin/python tools/release.py             # tags v<version> at HEAD, uploads <Mod>.dll
+```
+
+`tools/release.py` refuses unless the checkout is on `main`, clean and level with `origin/main`,
+the tag `v<Mod.Version>` doesn't exist yet, and `tools/check.sh` passes. The notes contain install
+steps, this version's changelog row, the DLL's SHA-256 and GitHub's list of merged PRs. `--mod
+<Name>` picks one when a repo has several mods.
+
+- Release only when the user asks: it's outward-facing.
+- Repos are private, so only people with access to the repo can download releases. Making a repo public is
+  the user's decision (check the game's EULA and the developer's stance on mods first, see the game layer).
 
 ## Git conventions
 
