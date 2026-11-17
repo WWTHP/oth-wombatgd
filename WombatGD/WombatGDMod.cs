@@ -4,7 +4,7 @@ using Il2Cpp;
 using MelonLoader;
 using UnityEngine;
 
-[assembly: MelonInfo(typeof(WombatGD.WombatGDMod), "WombatGD", "0.5.4", "jims")]
+[assembly: MelonInfo(typeof(WombatGD.WombatGDMod), "WombatGD", "0.5.5", "jims")]
 [assembly: MelonGame(null, "over the hill")]
 
 namespace WombatGD

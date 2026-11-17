@@ -64,7 +64,7 @@ Current version: see `MelonInfo` in `WombatGD/WombatGDMod.cs` (0.5.4 at migratio
 
 | Version | Date | Change |
 | --- | --- | --- |
-| (unreleased) | 2026-11-15 | Analyzer/format cleanups; `Profile` wire format moved to `Core/` + 21 tests. No behaviour change intended; **needs an in-game smoke test** (load, MP sync). |
+| 0.5.5 | 2026-11-17 | Analyzer/format cleanups; `Profile` wire format moved to `Core/` + 21 tests. No behaviour change intended. Released without an in-game run (user decision); **needs an in-game smoke test** (load, MP sync). |
 | 0.5.4 | 2026-11-11 | Antenna moved to the windscreen pillar (collider probe). |
 | 0.5.3 | 2026-11-10 | Smoke clones stock exhaust, `Emit` only; fixed MP crashes (CrashGuard stage `smoke`). Confirmed in MP as client. |
 | 0.5.2 | 2026-11-10 | Detour forwards only keys 1/2 (+ chained). CrashGuard added. |
