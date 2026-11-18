@@ -8,7 +8,7 @@ aspirated inline-5 diesel):
 - passenger-side **snorkel** (mirrored stock snorkel) and **antenna** moved to the windscreen pillar
 - **diesel engine sound** layered over / replacing the stock engine (FMOD core API)
 - **coal smoke**: black diesel smoke scaled with throttle, plus a **smoke screen** key
-- **F7** settings menu, **F8** engine sound cycle, **F9** smoke screen (all configurable)
+- Settings: the settings hub tab **WombatGD** (F5), or **F7** without the hub; **F8** engine sound cycle, **F9** smoke screen (all configurable)
 - **multiplayer sync** of each player's truck profile to other players running the mod
 
 Current version: see `MelonInfo` in `WombatGD/WombatGDMod.cs` (0.5.4 at migration).
@@ -64,6 +64,7 @@ Current version: see `MelonInfo` in `WombatGD/WombatGDMod.cs` (0.5.4 at migratio
 
 | Version | Date | Change |
 | --- | --- | --- |
+| 0.6.0 | 2026-11-17 | Menu is a tab in the settings hub (F5); F7 only opens it when the hub isn't installed. Save happens when leaving the tab. |
 | 0.5.5 | 2026-11-17 | Analyzer/format cleanups; `Profile` wire format moved to `Core/` + 21 tests. No behaviour change intended. Released without an in-game run (user decision); **needs an in-game smoke test** (load, MP sync). |
 | 0.5.4 | 2026-11-11 | Antenna moved to the windscreen pillar (collider probe). |
 | 0.5.3 | 2026-11-10 | Smoke clones stock exhaust, `Emit` only; fixed MP crashes (CrashGuard stage `smoke`). Confirmed in MP as client. |

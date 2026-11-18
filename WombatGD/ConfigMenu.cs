@@ -4,8 +4,9 @@ using UnityEngine;
 namespace WombatGD
 {
     /// <summary>
-    /// In-game settings window (IMGUI). Toggled with the MenuKey (default F7).
-    /// Changes apply live; they are written to MelonPreferences.cfg on Save/Close.
+    /// In-game settings (IMGUI). <see cref="DrawBody"/> is the settings hub tab (registered in the
+    /// mod); without the hub, MenuKey (default F7) opens it in a window of its own. Changes apply
+    /// live; they are written to MelonPreferences.cfg on Save/Close or when leaving the hub tab.
     /// </summary>
     internal static class ConfigMenu
     {
@@ -14,14 +15,15 @@ namespace WombatGD
         private const float W = 520f, RowH = 26f, Pad = 12f, LabelW = 190f, ValueW = 60f;
         private static Vector2 _scroll;
         private static float _contentH = 1200f;
-        private static float _y;
+        private static float _y, _w = W - 24f;
         private static bool _dirty;
         private static CursorLockMode _prevLock;
         private static bool _prevVisible;
 
         public static void Update()
         {
-            if (Settings.Pressed(Settings.MenuKey)) Toggle();
+            if (!HubTab.HubPresent && Settings.Pressed(Settings.MenuKey)) Toggle();
+            if (IsOpen && HubTab.HubPresent) Toggle(); // the hub took over
             if (IsOpen)
             {
                 // The game re-locks the cursor; keep it free while the menu is up.
@@ -40,7 +42,7 @@ namespace WombatGD
             }
             else
             {
-                if (_dirty) { Settings.Save(); _dirty = false; }
+                SaveIfDirty();
                 Cursor.lockState = _prevLock;
                 Cursor.visible = _prevVisible;
             }
@@ -63,6 +65,21 @@ namespace WombatGD
             var view = new Rect(win.x, win.y + 38f, W, viewH - 38f - 44f);
             var content = new Rect(0f, 0f, W - 24f, _contentH);
             _scroll = GUI.BeginScrollView(view, _scroll, content);
+            try { _contentH = DrawBody(W - 24f); }
+            finally { GUI.EndScrollView(); }
+
+            float by = win.yMax - 36f;
+            if (GUI.Button(new Rect(win.x + Pad, by, 110f, 26f), "Save")) { Settings.Save(); _dirty = false; }
+            if (GUI.Button(new Rect(win.x + Pad + 120f, by, 140f, 26f), "Reset defaults")) ResetDefaults();
+            if (GUI.Button(new Rect(win.xMax - Pad - 110f, by, 110f, 26f), "Close")) Toggle();
+
+            GUI.matrix = Matrix4x4.identity;
+        }
+
+        /// <summary>Menu content at (0, 0), <paramref name="width"/> wide. Returns the height used.</summary>
+        public static float DrawBody(float width)
+        {
+            _w = width;
             _y = 0f;
 
             Section("Snorkel");
@@ -129,29 +146,34 @@ namespace WombatGD
             }
 
             Section("Keys (edit in MelonPreferences.cfg)");
-            Info($"Menu {Settings.MenuKey.Value}   Cycle stock sound {Settings.EngineSoundCycleKey.Value}   Smoke screen {Settings.SmokeScreenKey.Value}");
+            Info($"{(HubTab.HubPresent ? "Menu: settings hub" : "Menu " + Settings.MenuKey.Value)}   Cycle stock sound {Settings.EngineSoundCycleKey.Value}   Smoke screen {Settings.SmokeScreenKey.Value}");
 
-            _contentH = _y + Pad;
-            GUI.EndScrollView();
+            return _y + Pad;
+        }
 
-            float by = win.yMax - 36f;
-            if (GUI.Button(new Rect(win.x + Pad, by, 110f, 26f), "Save")) { Settings.Save(); _dirty = false; }
-            if (GUI.Button(new Rect(win.x + Pad + 120f, by, 140f, 26f), "Reset defaults")) { Settings.ResetToDefaults(); _dirty = true; }
-            if (GUI.Button(new Rect(win.xMax - Pad - 110f, by, 110f, 26f), "Close")) Toggle();
+        public static void SaveIfDirty()
+        {
+            if (!_dirty) return;
+            Settings.Save();
+            _dirty = false;
+        }
 
-            GUI.matrix = Matrix4x4.identity;
+        public static void ResetDefaults()
+        {
+            Settings.ResetToDefaults();
+            _dirty = true;
         }
 
         private static void Section(string title)
         {
             _y += 8f;
-            GUI.Label(new Rect(Pad, _y, W, RowH), $"<b><color=#f0c060>{title}</color></b>");
+            GUI.Label(new Rect(Pad, _y, _w, RowH), $"<b><color=#f0c060>{title}</color></b>");
             _y += RowH;
         }
 
         private static void Info(string text)
         {
-            GUI.Label(new Rect(Pad + 8f, _y, W - 3 * Pad, RowH), text);
+            GUI.Label(new Rect(Pad + 8f, _y, _w - 2 * Pad, RowH), text);
             _y += RowH;
         }
 
@@ -164,7 +186,7 @@ namespace WombatGD
 
         private static void Toggle(MelonPreferences_Entry<bool> e, string label)
         {
-            bool v = GUI.Toggle(new Rect(Pad + 8f, _y, W - 3 * Pad, RowH), e.Value, " " + label);
+            bool v = GUI.Toggle(new Rect(Pad + 8f, _y, _w - 2 * Pad, RowH), e.Value, " " + label);
             if (v != e.Value) { e.Value = v; _dirty = true; }
             _y += RowH;
         }
@@ -173,7 +195,7 @@ namespace WombatGD
         {
             GUI.Label(new Rect(Pad + 8f, _y, LabelW, RowH), label);
             float sx = Pad + 8f + LabelW;
-            float sw = W - 24f - sx - ValueW - Pad;
+            float sw = _w - sx - ValueW - Pad;
             float v = GUI.HorizontalSlider(new Rect(sx, _y + 8f, sw, RowH), e.Value, min, max);
             GUI.Label(new Rect(sx + sw + 8f, _y, ValueW, RowH), e.Value.ToString(fmt));
             if (!Mathf.Approximately(v, e.Value)) { e.Value = v; _dirty = true; }
