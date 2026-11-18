@@ -68,7 +68,8 @@ Each one comes from a real crash or hang. The game layer adds game-specific rule
 ## Conventions
 
 - Settings via `MelonPreferences` (one category per mod). UI via IMGUI. Every key configurable,
-  and registered in the game layer's registry.
+  and registered in the game layer's registry. Menus register a settings hub tab
+  (`snippets/generic/HubTab.cs.txt`, generic doc §Step 5b).
 - Log through the mod's `MelonLogger.Instance`. Log what was found/skipped so a single in-game
   run can be diagnosed from the log.
 - Conventional commits (`fix(net): …`), branch + PR + green CI (see repo-management.md).

@@ -64,6 +64,17 @@ another mod's DLL.
   hard-coded fallback.
 - Rigidbodies on joints must be re-seated after you move them (toggle the GameObject).
 
+### Step 5b: Menus (settings hub)
+
+All WWTHP mods share one menu key: the settings hub (`oth-settings-hub`) shows a tab per mod.
+Copy [`snippets/generic/HubTab.cs.txt`](../../snippets/generic/HubTab.cs.txt) into the mod as
+`HubTab.cs`, register the menu body in `OnInitializeMelon`, and read the mod's own `MenuKey`
+only when `!HubTab.HubPresent` (so the mod still has a menu without the hub). The two sides
+meet through `AppDomain` data slots holding BCL types only, so no mod references another
+(rule 6). Mods that don't register still get a plain editor tab built from their
+`MelonPreferences` (give entries a display name, a description, and a `ValueRange` validator
+for numbers so they get a slider).
+
 ### Step 6: Multiplayer
 
 Ride the game's own networking with a custom message key rather than opening sockets. Sync
@@ -126,6 +137,14 @@ messages. If `_chained`, forward everything else to `_next`. If you sit directly
 handler, forward only what the game itself handles (the game layer lists it) and drop the rest.
 
 ---
+
+### C# compile pitfall: CS0656 `NullableAttribute..ctor`
+
+Seen in oth-settings-hub 0.1.0 (net6 mod project referencing the interop assemblies): `record`
+types, value tuples, and some LINQ lambdas (`SelectMany`, `ToDictionary`, `Select((x, i) => …)`)
+failed with *Missing compiler required member 'System.Runtime.CompilerServices.NullableAttribute..ctor'*.
+Plain classes/structs and `foreach` loops compile. Core code shared with the test project must
+avoid them too, since the mod compiles it.
 
 ## 4. Proton / Linux specifics
 

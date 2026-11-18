@@ -69,12 +69,14 @@ Workstation notes: interactive `cp` is aliased to `cp -i` and `rm` moves to the 
 | `OverlandNetworkRunner` | `Instance`, `NetworkRunner`, `IsLocalPlayerSpawned`, `OnReliableDataReceived` (vtable hook) |
 | `NetworkRunner` (Fusion) | `SendReliableDataToServer(ReliableKey, ReadOnlySpan<byte>)`, `SendReliableDataToPlayer(PlayerRef, …)`, `IsServer`, `IsSinglePlayer`, `Topology`, `LocalPlayer`, `ActivePlayers` |
 | `ChallengeTrail`, `ChallengeTrailInfo` | challenge trail waypoints (used for yeti placement) |
+| `VehicleBase` (VPP, `Il2CppVehiclePhysics`) | `wheelState[i]` (`suspensionState.contactSpeed`/`compressionRatio`, `grounded`, `wheelCol`), `isHardImpact`/`localImpactPosition`/`localImpactVelocity`, `SetWheelRadius(int, float)`/`GetWheelRadius`, `SetWheelTireFrictionMultiplier(int, float)` (oth-tire-damage) |
+| `CampManager` | `RepairPartyCars()`, `RPC_EndCamping()` (camp heals cars) |
 | `CarKicker` | seen in the decompiled sources (impulses to cars); not used by a mod yet |
-| `CarDamageSystem` | per car: `DamageAmount`, `MaxDamageAmount`, `vehicle` (VPP `VPVehicleController`), `damageEffects`, `originalSpeedLimit`, `originalMaxTorque`, `ApplyDriveabilityDebuffs()`/`ResetDriveabilityDebuffs()`, `HealOnCabinArrival`, `OnPOIReached(PointOfInterest)` |
+| `CarDamageSystem` | per car: `DamageAmount`, `MaxDamageAmount`, `vehicle` (VPP `VPVehicleController`), `damageEffects`, `originalSpeedLimit`, `originalMaxTorque`, `ApplyDriveabilityDebuffs()`/`ResetDriveabilityDebuffs()`, `HealOnCabinArrival`, `HealOnPointOfInterestArrival`, `OnPOIReached(PointOfInterest)`, private `PerformLocalPlayerHealingOperations(HealthChangingReason)` (HealedByPOI/Teleporting/Self/Other/Camping) |
 | `DamageEffects` | ScriptableObject: `AnimationCurve` `maxSpeedMultiplier`, `accelerationMultiplier`, `torqueMultiplier` (damage → driveability). Worst case seen on the Wombat: speed x0.50, torque x0.80 |
 | `Il2CppVehiclePhysics.VPVehicleController` (in Assembly-CSharp) | `speedControl` (`speedLimiter`, `speedLimit`), `engine` (`peakRpmTorque`, `torqueCap`, `torqueCapLimit`, …), runtime `m_engine.throttleInput` |
 | `PointOfInterest` | `Info.Type` (`PointOfInterestType`: Generic, Cabin, Merchant, Scenic, Trail, Portal, ItemRecovery, Puzzle). Houses are `Cabin : SpawnablePointOfInterest` |
-| `VehicleUpgradeObject` | mounted part on a car: `VehiclePartReference` (`VehiclePartSO`; `VehicleCosmetic.CosmeticType`). Side jerry cans exist as `Side_Jerry Cans` / `Side_Jerrycan` in the assets |
+| `VehicleUpgradeObject` | mounted part on a car: `VehiclePartReference` (`VehiclePartSO`; `VehicleCosmetic.CosmeticType`). Side jerry cans exist as `Side_Jerry Cans` / `Side_Jerrycan` in the assets. Spare wheels: `Sparewheel_Rear`, `_Trasheroo`, `_Machette`, `_Axe_Shovel`, `_Wreath`, `_cover_00/01`. Side tools: `Side_Tool_{Sledgehammer,PipeWrench,HiLiftJack,Axe,Shovel,PickAxe,IcePicks,BoltCutters,Machette}` |
 | `Odometer` | per car: `mTravelled` (metres) |
 | `ContextUIInclineIndicator` | the two bottom-left tilt dials (HUD). Only `SetIncline`/`SetEnabled`: driven from outside, so a clone with the component removed stays still. See §HUD |
 | `CarHealthUI`, `ContextUIEngineRPMDisplay`, `ContextUIOdometerPanel` | HUD panels. `CarHealthUI`'s rect is a full-screen container; the RPM display sits bottom right. Neither is a good placement anchor. `ContextUIEngineRPMDisplay : UIContainer` needs a reference to `Il2CppFunselektor.FunCore.Runtime` |
@@ -126,10 +128,13 @@ adapt `Settings`/`Mod` references and `Describe()`.
 | --- | --- | --- | --- | --- | --- |
 | `oth-wombatgd` | WombatGD | F7 menu, F8 engine sound cycle, F9 smoke screen | `"WGGD"` `0x57474744` | 1 | `WombatGD/` |
 | `oth-abominable-snowman` | AbominableSnowman | F6 menu | `"YETI"` `0x49544559` | 1 | `AbominableSnowman/` |
+| `oth-settings-hub` | SettingsHub | F5 menu for every mod (tabs) | none (AppDomain slots `WWTHP.SettingsHub.*.v1`, see generic §Menus) | 1 | `SettingsHub/` (CrashGuard only) |
+| `oth-tire-damage` | TireDamage | F4 tire repair screen, F1 menu without the hub | none | - | `TireDamage/` (CrashGuard only) |
 | `oth-fuel-management` | FuelManagement | F10 menu, F11 (hold) siphon | `"FUEL"` `0x4C455546` | 1 | `FuelManagement/` (CrashGuard only) |
 
 Taken by third-party mods the user runs: `OTHNight`, `ImmersiveFirstPersonView`, `OTH.CosmeticStacker`
-(no networking). Pick unused keys; make every key configurable.
+(no networking); `OTHNight` uses F2/F3. Pick unused keys; make every key configurable. A mod's own
+menu key only works without the settings hub; new mods should still have one.
 
 ## Incident log (game-level lessons, newest first)
 
