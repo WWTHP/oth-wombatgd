@@ -1,0 +1,54 @@
+// Copy into a mod as HubTab.cs and change the namespace. Reference: WWTHP settings hub
+// (oth-settings-hub, Registry.cs / Core/TabSpec.cs). See docs/generic/il2cpp-melonloader.md §Menus.
+//
+// Gives the mod a tab in the settings hub without referencing the hub's assembly (rule 6): both
+// sides only exchange BCL types through two AppDomain data slots. Main thread only.
+//
+// Usage, in OnInitializeMelon (works whether the hub loads before or after this mod):
+//
+//     HubTab.Register("Fuel", Menu.DrawBody,
+//         categories: new[] { "FuelManagement" },   // hides the hub's plain editor for these
+//         closed: Menu.SaveIfDirty, reset: Settings.ResetToDefaults,
+//         owner: "FuelManagement " + Mod.Version);
+//
+// and where the mod reads its own menu key:
+//
+//     if (!HubTab.HubPresent && Settings.Pressed(Settings.MenuKey)) Menu.Toggle();
+//
+// draw(width) is called inside the hub's scroll view: draw with GUI.* at absolute rects starting
+// at (0, 0), at most `width` wide, and return the height used. Don't change GUI.matrix and don't
+// call GUI.Window. An exception switches the tab off (the hub shows a "Try again" button).
+// The hub manages the cursor while it's open.
+
+using System;
+using System.Collections.Generic;
+
+namespace ModName
+{
+    internal static class HubTab
+    {
+        private const string HubKey = "WWTHP.SettingsHub.Hub.v1";
+        private const string TabsKey = "WWTHP.SettingsHub.Tabs.v1";
+
+        /// <summary>True while an enabled settings hub is loaded: skip the mod's own menu key.</summary>
+        public static bool HubPresent => AppDomain.CurrentDomain.GetData(HubKey) != null;
+
+        public static void Register(string name, Func<float, float> draw, string[] categories = null,
+            Action opened = null, Action closed = null, Action reset = null, int order = 100, string owner = null)
+        {
+            var domain = AppDomain.CurrentDomain;
+            if (domain.GetData(TabsKey) is not List<Dictionary<string, object>> tabs)
+            {
+                tabs = new List<Dictionary<string, object>>();
+                domain.SetData(TabsKey, tabs);
+            }
+            var reg = new Dictionary<string, object> { ["name"] = name, ["draw"] = draw, ["order"] = order };
+            if (categories != null) reg["categories"] = categories;
+            if (opened != null) reg["opened"] = opened;
+            if (closed != null) reg["closed"] = closed;
+            if (reset != null) reg["reset"] = reset;
+            if (owner != null) reg["owner"] = owner;
+            tabs.Add(reg);
+        }
+    }
+}
