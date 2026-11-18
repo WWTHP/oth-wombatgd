@@ -4,7 +4,7 @@ using Il2Cpp;
 using MelonLoader;
 using UnityEngine;
 
-[assembly: MelonInfo(typeof(WombatGD.WombatGDMod), "WombatGD", "0.5.5", "jims")]
+[assembly: MelonInfo(typeof(WombatGD.WombatGDMod), "WombatGD", "0.6.0", "jims")]
 [assembly: MelonGame(null, "over the hill")]
 
 namespace WombatGD
@@ -17,6 +17,7 @@ namespace WombatGD
     public class WombatGDMod : MelonMod
     {
         internal static MelonLogger.Instance Log;
+        private static readonly string[] Categories = { "WombatGD" };
 
         public override void OnInitializeMelon()
         {
@@ -24,6 +25,8 @@ namespace WombatGD
             Settings.Init();
             CrashGuard.Init();
             NetSync.Init();
+            HubTab.Register("WombatGD", ConfigMenu.DrawBody, categories: Categories,
+                closed: ConfigMenu.SaveIfDirty, reset: ConfigMenu.ResetDefaults, owner: "WombatGD 0.6.0");
             Log.Msg($"WombatGD loaded. {Settings.MenuKey.Value} = settings, " +
                     $"{Settings.SmokeScreenKey.Value} = smoke screen. Sounds: {DieselLayer.SoundsDir}");
         }
