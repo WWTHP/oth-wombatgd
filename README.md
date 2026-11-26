@@ -12,3 +12,6 @@ cd WombatGD && dotnet build -c Release  # build + deploy to the game
 
 Details: [docs/project/README.md](docs/project/README.md). Agents: start at [AGENTS.md](AGENTS.md).
 Sound credits: [assets/sounds/loops/CREDITS.txt](assets/sounds/loops/CREDITS.txt).
+
+Code: MIT ([LICENSE](LICENSE)). Sounds keep their own CC0 / CC BY licences, listed in
+[assets/sounds/SOURCES.md](assets/sounds/SOURCES.md) and shipped as `CREDITS.txt`.
