@@ -10,12 +10,12 @@ between repos. Agents managing the repos follow this file.
 | `WWTHP/mod-template` | **Template repository.** Shared knowledge, rules, tooling, skeleton. Every mod repo is created from it. |
 | `WWTHP/<game>-<mod>` | One repo per mod, e.g. `oth-wombatgd`, `oth-abominable-snowman`. |
 
-- All repos are **private**.
+- All repos are **public**, MIT-licensed (`LICENSE`, project-owned, copied in when a repo is created).
+  Media keep their own CC0/CC BY licences (AGENTS rule 13).
 - **Grouping:** name prefix per game (`oth-` = Over the Hill), topics (`<game-slug>`,
   `melonloader-mod`, `il2cpp`, and `template` for the template), and one GitHub Project board
   per game (e.g. "Over the Hill mods") that tracks issues from all of its repos.
-- Free plan: no branch protection on private repos. The rule is still **PR + green CI to
-  merge to `main`**. Agents don't push directly to `main` except for initial bootstrap.
+- The rule is **PR + green CI to merge to `main`**. Agents don't push directly to `main` except for initial bootstrap.
 
 ## Knowledge layers
 
@@ -61,7 +61,7 @@ When work on a mod teaches something:
 
 ### New mod
 ```bash
-gh repo create WWTHP/<game>-<slug> --private --template WWTHP/mod-template --clone
+gh repo create WWTHP/<game>-<slug> --public --template WWTHP/mod-template --clone
 cd <game>-<slug>
 python3 -m venv .venv && .venv/bin/pip install -r requirements-dev.txt
 tools/new-mod.sh <PascalName>
@@ -105,8 +105,8 @@ assets/sounds/loops/*  -> UserData/WombatGD/Sounds
 Ship licence/credit files with media (e.g. `CREDITS.txt` in the same folder), see AGENTS rule 13.
 
 - Release only when the user asks: it's outward-facing.
-- Repos are private, so only people with access to the repo can download releases. Making a repo public is
-  the user's decision (check the game's EULA and the developer's stance on mods first, see the game layer).
+- Repos are public: anyone can download releases, and the
+  [installer](https://github.com/WWTHP/oth-installer) lists every `oth-*` repo's latest release automatically.
 
 ## Git conventions
 

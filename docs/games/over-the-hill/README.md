@@ -32,9 +32,9 @@ Game-code reference (interop stubs: signatures plus calls into native code, no g
 
 Legal position (not legal advice): reading interop stubs to make mods interoperate is the
 interoperability case that US fair use (*Sega v. Accolade*, *Sony v. Connectix*, DMCA §1201(f))
-and the EU Software Directive Art. 6 protect. The open risk is contractual. **Before publishing
-any mod, check the game's EULA and Funselektor's stated stance on mods** and record it here.
-Not yet checked (2026-11-15).
+and the EU Software Directive Art. 6 protect. The open risk is contractual. The repos were made
+public on 2026-11-25 by the owner's decision. Funselektor's stated stance on mods was not found
+(web search, 2026-11-25); record it here once known, and act on any request from them.
 
 Workstation notes: interactive `cp` is aliased to `cp -i` and `rm` moves to the trash. Use
 `\cp -f` / `\rm -rf` in agent one-liners.
@@ -58,6 +58,18 @@ Workstation notes: interactive `cp` is aliased to `cp -i` and `rm` moves to the 
 7. Particles: clone the stock exhaust system (`ExhaustParticlesManager.exhaustParticleSystem.noDamageParticleSystem`)
    with `Object.Instantiate` and only `Emit`.
    (oth-wombatgd 0.5.3: hand-built ParticleSystem + Get/SetParticles crashed in MP.)
+8. **Ground settings are shared assets.** `GroundMaterialConfig` (`Grip`, `Drag`, …) is one
+   ScriptableObject per ground type, used by every car this machine simulates. Change it only while
+   this machine runs only the local car's physics (`Rigidbody.isKinematic == false` for it, and for
+   no car whose `NetworkObject.InputAuthority.IsRealPlayer` is another player), restore the
+   originals otherwise, and log which machine runs each car. Per-car effects go through the
+   car's own `VehicleBase` instead. (oth-tire-damage 0.6.0.)
+9. **The host runs every car's physics.** Topology is ClientServer: on the host every car is
+   non-kinematic with `HasStateAuthority`; a client also simulates every car (non-kinematic) but
+   only predicts (`state authority remote`), and the host's result wins. A physics change made on
+   a client (wheel grip, radius, drag) reads back there but does not decide how the car drives:
+   send it to the host and apply it there too (keep it on the client so prediction agrees).
+   Match the car by `NetworkObject.InputAuthority.Raw` = the packet's sender. (oth-tire-damage 0.7.0.)
 
 ## Useful game classes
 
@@ -69,7 +81,8 @@ Workstation notes: interactive `cp` is aliased to `cp -i` and `rm` moves to the 
 | `OverlandNetworkRunner` | `Instance`, `NetworkRunner`, `IsLocalPlayerSpawned`, `OnReliableDataReceived` (vtable hook) |
 | `NetworkRunner` (Fusion) | `SendReliableDataToServer(ReliableKey, ReadOnlySpan<byte>)`, `SendReliableDataToPlayer(PlayerRef, …)`, `IsServer`, `IsSinglePlayer`, `Topology`, `LocalPlayer`, `ActivePlayers` |
 | `ChallengeTrail`, `ChallengeTrailInfo` | challenge trail waypoints (used for yeti placement) |
-| `VehicleBase` (VPP, `Il2CppVehiclePhysics`) | `wheelState[i]` (`suspensionState.contactSpeed`/`compressionRatio`, `grounded`, `wheelCol`), `isHardImpact`/`localImpactPosition`/`localImpactVelocity`, `SetWheelRadius(int, float)`/`GetWheelRadius`, `SetWheelTireFrictionMultiplier(int, float)` (oth-tire-damage) |
+| `VehicleBase` (VPP, `Il2CppVehiclePhysics`) | `wheelState[i]` (`suspensionState.contactSpeed`/`compressionRatio`, `grounded`, `wheelCol`), `isHardImpact`/`localImpactPosition`/`localImpactVelocity`, `SetWheelRadius(int, float)`/`GetWheelRadius`, `SetWheelTireFrictionMultiplier(int, float)` (oth-tire-damage). Per wheel: `slipAngle`/`peakSlipAngle` (sideways) and `slipRatio`/`peakSlipRatio` (along the tire): compare each against its peak to tell cornering from wheelspin; `tireForceMult` reads back the friction multiplier (1.00 normally, the game did not rewrite it; values above 1 are kept and do add grip); `groundMaterial.Config` = the ground under the wheel. `m_groundMaterialIndexToConfig` lists the ground types |
+| `GroundMaterialConfig` (ScriptableObject, shared, see rule 8) | `Label` (`MaterialLabel` flags: Grass, Gravel, Mud, DeepMud, Dirt, Water, Rock, LooseRock, WoodPlank, WoodTrunk, Snow, DeepSnow, Ice, Sand, DeepSand, QuickSand, Bricks, ShallowSnow), `Grip` (snow 0.72, deep snow 0.75, ice 0.30, gravel 0.84, dirt 0.88, rock 0.92), `Drag` (deep snow 0.25, snow 0.15, gravel 0.10, ice/rock/dirt 0), `SurfaceType` (Hard/Soft/Neutral). Read live by the physics: changing `Drag` takes effect at once. Deep snow climbs are limited by drag more than by grip |
 | `CampManager` | `RepairPartyCars()`, `RPC_EndCamping()` (camp heals cars) |
 | `CarKicker` | seen in the decompiled sources (impulses to cars); not used by a mod yet |
 | `CarDamageSystem` | per car: `DamageAmount`, `MaxDamageAmount`, `vehicle` (VPP `VPVehicleController`), `damageEffects`, `originalSpeedLimit`, `originalMaxTorque`, `ApplyDriveabilityDebuffs()`/`ResetDriveabilityDebuffs()`, `HealOnCabinArrival`, `HealOnPointOfInterestArrival`, `OnPOIReached(PointOfInterest)`, private `PerformLocalPlayerHealingOperations(HealthChangingReason)` (HealedByPOI/Teleporting/Self/Other/Camping) |
@@ -126,20 +139,23 @@ adapt `Settings`/`Mod` references and `Describe()`.
 
 | Repo | Mod | Menu / keys | Net tag (`int0`) | Protocol | UserData folder |
 | --- | --- | --- | --- | --- | --- |
-| `oth-wombatgd` | WombatGD | F7 menu, F8 engine sound cycle, F9 smoke screen | `"WGGD"` `0x57474744` | 1 | `WombatGD/` |
-| `oth-abominable-snowman` | AbominableSnowman | F6 menu | `"YETI"` `0x49544559` | 1 | `AbominableSnowman/` |
+| `oth-wombatgd` | WombatGD | hub tab (F7 menu without the hub), F8 engine sound cycle, F9 smoke screen | `"WGGD"` `0x57474744` | 1 | `WombatGD/` |
+| `oth-abominable-snowman` | AbominableSnowman | hub tab (F6 menu without the hub) | `"YETI"` `0x49544559` | 1 | `AbominableSnowman/` |
 | `oth-settings-hub` | SettingsHub | F5 menu for every mod (tabs) | none (AppDomain slots `WWTHP.SettingsHub.*.v1`, see generic §Menus) | 1 | `SettingsHub/` (CrashGuard only) |
-| `oth-tire-damage` | TireDamage | F4 tire repair screen, F1 menu without the hub | none | - | `TireDamage/` (CrashGuard only) |
-| `oth-fuel-management` | FuelManagement | F10 menu, F11 (hold) siphon | `"FUEL"` `0x4C455546` | 1 | `FuelManagement/` (CrashGuard only) |
+| `oth-tire-damage` | TireDamage | F4 / pad L3+R3 tire repair screen, hub tab (F1 menu without the hub) | none | - | `TireDamage/` (CrashGuard only) |
+| `oth-fuel-management` | FuelManagement | hub tab (F10 menu without the hub), F11 (hold) siphon | `"FUEL"` `0x4C455546` | 1 | `FuelManagement/` (CrashGuard only) |
 
 Taken by third-party mods the user runs: `OTHNight`, `ImmersiveFirstPersonView`, `OTH.CosmeticStacker`
-(no networking); `OTHNight` uses F2/F3. Pick unused keys; make every key configurable. A mod's own
+(no networking); `OTHNight` uses F2/F3. Pick unused keys; make every key configurable. Controller: the game binds every pad button
+(`<Gamepad>/` paths in its assets), so a mod needs a chord (e.g. L3+R3) for a pad shortcut. A mod's own
 menu key only works without the settings hub; new mods should still have one.
 
 ## Incident log (game-level lessons, newest first)
 
 | Date | Repo/version | What happened | Lesson |
 | --- | --- | --- | --- |
+| 2026-11-20 | oth-tire-damage 0.6.1 | Low tire pressure worked for the host but not for a client: the client's grip writes read back locally, yet the host runs every car's physics with authority | per-car physics changes go to the host too, rule 9 |
+| 2026-11-19 | oth-tire-damage 0.6.0 | Low tire pressure gave +27 % grip on snow (logged, read back) yet climbs felt the same; halving loose-ground `Drag` fixed it (SP) | log the physics inputs before tuning feel; ground drag is shared, rule 8 |
 | 2026-11-11 | oth-wombatgd 0.5.3 | Confirmed working in MP as client after smoke rework | cloning stock exhaust + `Emit` is safe |
 | 2026-11-10 | oth-wombatgd 0.5.3 | Repeated MP crashes; CrashGuard marker = `smoke` | not networking: hand-built ParticleSystem; rule 7 |
 | 2026-11-10 | oth-wombatgd 0.5.2 | Detour forwarded unknown keys → silent death ~0.2 s after a second mod hooked | rule 4 + chaining convention |
